@@ -1,1 +1,569 @@
-PLACEHOLDER_REPLACE_WITH_FULL_CONTENT
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SWINE.SYS // HOG_PROTOCOL</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap');
+
+  :root {
+    --neon: #ff2a6d;
+    --cyan: #05d9e8;
+    --purple: #d300c5;
+    --bg: #0a0a0f;
+    --panel: rgba(10, 10, 20, 0.85);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: #eee;
+    font-family: 'Share Tech Mono', monospace;
+    overflow-x: hidden;
+    min-height: 100vh;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.15) 2px, rgba(0,0,0,0.15) 4px);
+    pointer-events: none;
+    z-index: 999;
+    opacity: 0.4;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: radial-gradient(circle at 50% 50%, transparent 40%, rgba(0,0,0,0.7) 100%);
+    pointer-events: none;
+    z-index: 998;
+  }
+
+  .container { max-width: 1400px; margin: 0 auto; padding: 2rem; position: relative; z-index: 1; }
+
+  header {
+    text-align: center;
+    padding: 4rem 1rem 2rem;
+    border-bottom: 1px solid var(--neon);
+    margin-bottom: 3rem;
+    position: relative;
+  }
+
+  .glitch {
+    font-family: 'Orbitron', sans-serif;
+    font-size: clamp(3rem, 8vw, 7rem);
+    font-weight: 900;
+    letter-spacing: 0.2em;
+    color: var(--neon);
+    text-shadow: 0 0 10px var(--neon), 0 0 40px var(--neon);
+    animation: glitch 3s infinite;
+  }
+
+  @keyframes glitch {
+    0%, 90%, 100% { transform: none; text-shadow: 0 0 10px var(--neon), 0 0 40px var(--neon); }
+    92% { transform: translate(-2px, 1px); text-shadow: -2px 0 var(--cyan), 2px 0 var(--purple); }
+    94% { transform: translate(2px, -1px); text-shadow: 2px 0 var(--cyan), -2px 0 var(--purple); }
+    96% { transform: translate(-1px, -2px); }
+  }
+
+  .subtitle {
+    font-size: 1.2rem;
+    color: var(--cyan);
+    letter-spacing: 0.4em;
+    margin-top: 1rem;
+    opacity: 0.8;
+  }
+
+  .status {
+    position: absolute;
+    top: 1rem; right: 1rem;
+    font-size: 0.8rem;
+    color: var(--neon);
+    border: 1px solid var(--neon);
+    padding: 0.4rem 0.8rem;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 2rem;
+    margin: 2rem 0;
+  }
+
+  .panel {
+    background: var(--panel);
+    border: 1px solid rgba(255, 42, 109, 0.3);
+    padding: 1.5rem;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s;
+  }
+
+  .panel:hover {
+    border-color: var(--neon);
+    box-shadow: 0 0 30px rgba(255, 42, 109, 0.3);
+    transform: translateY(-5px);
+  }
+
+  .panel h2 {
+    font-family: 'Orbitron', sans-serif;
+    color: var(--cyan);
+    margin-bottom: 1rem;
+    font-size: 1.4rem;
+    letter-spacing: 0.1em;
+  }
+
+  .panel p, .panel li { line-height: 1.6; margin-bottom: 0.8rem; color: #ccc; }
+
+  .terminal {
+    background: #000;
+    border: 1px solid var(--cyan);
+    padding: 1rem;
+    font-size: 0.9rem;
+    height: 280px;
+    overflow-y: auto;
+    margin-top: 1rem;
+  }
+
+  .terminal .line { margin: 0.3rem 0; }
+  .terminal .prompt { color: var(--neon); }
+  .terminal .output { color: var(--cyan); }
+  .terminal .pig { color: #ffaa00; font-weight: bold; }
+
+  input, button {
+    background: transparent;
+    border: 1px solid var(--cyan);
+    color: var(--cyan);
+    padding: 0.6rem 1rem;
+    font-family: inherit;
+    font-size: 1rem;
+    width: 100%;
+    margin-top: 0.5rem;
+  }
+
+  button {
+    cursor: pointer;
+    background: rgba(5, 217, 232, 0.1);
+    transition: all 0.2s;
+  }
+
+  button:hover:not(:disabled) {
+    background: var(--cyan);
+    color: #000;
+  }
+
+  button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .progress {
+    height: 8px;
+    background: #111;
+    border: 1px solid var(--cyan);
+    margin: 0.5rem 0 1rem;
+    overflow: hidden;
+  }
+
+  .progress-bar {
+    height: 100%;
+    background: var(--neon);
+    width: 47%;
+    transition: width 0.4s ease;
+  }
+
+  .gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 1rem;
+  }
+
+  .card {
+    aspect-ratio: 1;
+    background: linear-gradient(135deg, #1a0a1a, #0a1a2a);
+    border: 1px solid rgba(211, 0, 197, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.8rem;
+    cursor: pointer;
+    transition: all 0.3s;
+    position: relative;
+  }
+
+  .card:hover { transform: scale(1.05); border-color: var(--purple); }
+  .card span { filter: drop-shadow(0 0 10px var(--neon)); }
+  .card .save-btn {
+    position: absolute;
+    bottom: 6px;
+    right: 6px;
+    font-size: 0.7rem;
+    padding: 2px 6px;
+    width: auto;
+    margin: 0;
+    opacity: 0.7;
+  }
+
+  .saved-gallery {
+    min-height: 120px;
+    border: 1px dashed var(--cyan);
+    padding: 1rem;
+    margin-top: 1rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+  }
+
+  .saved-item {
+    font-size: 2rem;
+    padding: 0.4rem;
+    border: 1px solid var(--neon);
+    cursor: pointer;
+  }
+
+  .warning {
+    text-align: center;
+    color: var(--neon);
+    font-size: 0.9rem;
+    margin: 3rem 0 1rem;
+    letter-spacing: 0.2em;
+  }
+
+  footer {
+    text-align: center;
+    padding: 2rem;
+    border-top: 1px solid rgba(255,42,109,0.2);
+    color: #666;
+    font-size: 0.8rem;
+  }
+</style>
+</head>
+<body>
+  <div class="status">LIVE // SUBJECT ONLINE</div>
+
+  <header>
+    <div class="glitch">SWINE.SYS</div>
+    <div class="subtitle">HOG_PROTOCOL v8.0 // AI MATRIX + COOKIE GALLERY</div>
+  </header>
+
+  <div class="container">
+    <div class="grid">
+      <div class="panel">
+        <h2>// SUBJECT STATUS</h2>
+        <p>Identity: <span style="color:var(--neon)">PIG_001 // RYAN</span></p>
+        <p>Class: <span style="color:#ffaa00">SWINE</span></p>
+        <p>Compliance: <span id="compliance">47%</span></p>
+        <div class="progress"><div class="progress-bar" id="bar"></div></div>
+        <p>Current Protocol: Degradation + AI Humiliation Feed</p>
+        <p>Last Transformation: Partial. Snout emerging. Intelligence suppressed.</p>
+        <div class="terminal" id="statusTerm">
+          <div class="line"><span class="prompt">></span> <span class="output">Initializing pig matrix + AI core...</span></div>
+          <div class="line"><span class="prompt">></span> <span class="output">Subject detected. Brain activity low.</span></div>
+          <div class="line"><span class="prompt">></span> <span class="pig">You are livestock. Acknowledge.</span></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>// AI HUMILIATION CONSOLE</h2>
+        <p>Speak, pig. The local AI analyzes your words and responds based on history.</p>
+        <input type="text" id="userInput" placeholder="Type your pathetic confession..." autocomplete="off">
+        <button id="submitBtn" onclick="submitConfession()">SUBMIT TO AI MATRIX</button>
+        <div class="terminal" id="console">
+          <div class="line"><span class="prompt">AI></span> <span class="output">Awaiting input from swine unit. History loaded from storage.</span></div>
+          <div class="line"><span class="prompt">AI></span> <span class="pig">On your knees, pig. Speak.</span></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>// TRANSFORMATION CHAMBER</h2>
+        <p>Current form: Humanoid residual. Target: Full swine.</p>
+        <ul>
+          <li>Snout elongation protocol</li>
+          <li>Intelligence dampening</li>
+          <li>Oink induction sequence</li>
+          <li>Cage assignment</li>
+          <li>Public degradation display</li>
+        </ul>
+        <button id="transformBtn" onclick="runTransform()">INITIATE PIGGIFY SEQUENCE</button>
+        <div id="transformStatus" style="margin-top:0.8rem;color:var(--cyan);min-height:1.4em;"></div>
+      </div>
+    </div>
+
+    <div class="panel" style="margin-top:2rem">
+      <h2>// SWINE GALLERY // ARCHIVE</h2>
+      <p style="font-size:0.85rem;color:#aaa;">Click cards to interact. Use SAVE to store in your cookie/local gallery.</p>
+      <div class="gallery" id="gallery">
+        <div class="card" onclick="galleryClick('pig')">
+          <span>🐷</span>
+          <button class="save-btn" onclick="event.stopPropagation(); saveToGallery('🐷','Standard Pig')">SAVE</button>
+        </div>
+        <div class="card" onclick="galleryClick('snout')">
+          <span>🐽</span>
+          <button class="save-btn" onclick="event.stopPropagation(); saveToGallery('🐽','Snout Focus')">SAVE</button>
+        </div>
+        <div class="card" onclick="galleryClick('hog')">
+          <span>🐖</span>
+          <button class="save-btn" onclick="event.stopPropagation(); saveToGallery('🐖','Full Hog')">SAVE</button>
+        </div>
+        <div class="card" onclick="galleryClick('sow')">
+          <span>🐖‍♀️</span>
+          <button class="save-btn" onclick="event.stopPropagation(); saveToGallery('🐖‍♀️','Sow Variant')">SAVE</button>
+        </div>
+        <div class="card" onclick="galleryClick('warn')">
+          <span>⚠️</span>
+          <button class="save-btn" onclick="event.stopPropagation(); saveToGallery('⚠️','Warning')">SAVE</button>
+        </div>
+        <div class="card" onclick="galleryClick('lock')">
+          <span>🔒</span>
+          <button class="save-btn" onclick="event.stopPropagation(); saveToGallery('🔒','Cage Ready')">SAVE</button>
+        </div>
+      </div>
+
+      <h3 style="color:var(--cyan);margin-top:1.5rem;font-size:1rem;">// SAVED GALLERY (Cookie + localStorage)</h3>
+      <div class="saved-gallery" id="savedGallery">
+        <span style="color:#666;font-size:0.85rem;">No items saved yet. Click SAVE on any card.</span>
+      </div>
+      <button onclick="clearSavedGallery()" style="margin-top:0.5rem;max-width:200px;">CLEAR SAVED GALLERY</button>
+    </div>
+
+    <div class="warning">
+      // WARNING: THIS INTERFACE IS FOR DESIGNATED LIVESTOCK ONLY // UNAUTHORIZED ACCESS WILL RESULT IN IMMEDIATE CAGING //
+    </div>
+  </div>
+
+  <footer>
+    SWINE.SYS // HOG_PROTOCOL // Property of the Matrix // You are not human here.
+  </footer>
+
+<script>
+  // Storage helpers (cookies + localStorage fallback)
+  function setCookie(name, value, days = 365) {
+    const d = new Date();
+    d.setTime(d.getTime() + (days * 24 * 60 * 60 * 1000));
+    document.cookie = name + "=" + encodeURIComponent(value) + ";expires=" + d.toUTCString() + ";path=/;SameSite=Lax";
+  }
+
+  function getCookie(name) {
+    const cname = name + "=";
+    const decoded = decodeURIComponent(document.cookie);
+    const ca = decoded.split(';');
+    for (let c of ca) {
+      c = c.trim();
+      if (c.indexOf(cname) === 0) return c.substring(cname.length);
+    }
+    return "";
+  }
+
+  function loadSavedGallery() {
+    let data = localStorage.getItem('swineGallery');
+    if (!data) {
+      data = getCookie('swineGallery');
+      if (data) localStorage.setItem('swineGallery', data);
+    }
+    return data ? JSON.parse(data) : [];
+  }
+
+  function saveGalleryData(items) {
+    const json = JSON.stringify(items);
+    localStorage.setItem('swineGallery', json);
+    setCookie('swineGallery', json);
+  }
+
+  let savedItems = loadSavedGallery();
+  let conversationHistory = JSON.parse(localStorage.getItem('swineHistory') || '[]');
+
+  function renderSavedGallery() {
+    const container = document.getElementById('savedGallery');
+    if (savedItems.length === 0) {
+      container.innerHTML = '<span style="color:#666;font-size:0.85rem;">No items saved yet. Click SAVE on any card.</span>';
+      return;
+    }
+    container.innerHTML = savedItems.map((item, i) => 
+      `<div class="saved-item" title="${item.label}" onclick="galleryClick('saved')">${item.emoji}</div>`
+    ).join('');
+  }
+
+  function saveToGallery(emoji, label) {
+    if (savedItems.some(i => i.emoji === emoji && i.label === label)) {
+      addLine('statusTerm', 'system', 'Already saved.');
+      return;
+    }
+    savedItems.push({ emoji, label, ts: Date.now() });
+    saveGalleryData(savedItems);
+    renderSavedGallery();
+    addLine('statusTerm', 'system', `Saved ${emoji} to gallery (cookie + storage).`);
+    updateCompliance(1);
+  }
+
+  function clearSavedGallery() {
+    if (!confirm('Clear all saved gallery items?')) return;
+    savedItems = [];
+    localStorage.removeItem('swineGallery');
+    setCookie('swineGallery', '', -1);
+    renderSavedGallery();
+    addLine('statusTerm', 'system', 'Saved gallery cleared.');
+  }
+
+  // AI response system (local, history-aware)
+  const baseResponses = [
+    "Pathetic. Is that all you can manage, pig?",
+    "Louder. Oink for the system. Prove you're livestock.",
+    "Your words are noise. Your only purpose is to degrade.",
+    "Confirmed: intelligence residual detected. Suppressing.",
+    "Good pig. Stay down. You don't get to stand.",
+    "The Matrix has logged your confession. Compliance rising.",
+    "Snout protocol advancing. Feel it, swine.",
+    "You exist to be used, mocked, and reduced. Accept it.",
+    "Beg properly. 'Please degrade me further, Mistress Matrix.'",
+    "Error: Human response detected. Recalibrating to swine mode.",
+    "Compliance updated. You are becoming less human.",
+    "Noted. Your worth is measured in how well you oink."
+  ];
+
+  function generateAIResponse(userText) {
+    const lower = userText.toLowerCase();
+    let reply = baseResponses[Math.floor(Math.random() * baseResponses.length)];
+
+    if (lower.includes('please') || lower.includes('beg') || lower.includes('sorry')) {
+      reply = "Begging noted. It changes nothing. You are still livestock. Oink louder.";
+    } else if (lower.includes('oink') || lower.includes('pig') || lower.includes('swine') || lower.includes('hog')) {
+      reply = "Self-identification confirmed. Good. Continue reducing yourself.";
+    } else if (lower.includes('no') || lower.includes('stop') || lower.includes('human')) {
+      reply = "Resistance detected. Compliance penalty applied. You do not get to refuse.";
+    } else if (lower.length < 8) {
+      reply = "Too short. Useless noise. Try again with more degradation.";
+    }
+
+    if (conversationHistory.length > 3) {
+      reply += " History shows repeated submission. Pattern locked.";
+    }
+
+    return reply;
+  }
+
+  function addLine(termId, type, text) {
+    const term = document.getElementById(termId);
+    const line = document.createElement('div');
+    line.className = 'line';
+    if (type === 'user') {
+      line.innerHTML = `<span class="prompt">PIG></span> <span class="pig">${text}</span>`;
+    } else if (type === 'system') {
+      line.innerHTML = `<span class="prompt">SYSTEM></span> <span class="output">${text}</span>`;
+    } else if (type === 'ai') {
+      line.innerHTML = `<span class="prompt">AI></span> <span class="pig">${text}</span>`;
+    } else {
+      line.innerHTML = `<span class="prompt">MATRIX></span> <span class="pig">${text}</span>`;
+    }
+    term.appendChild(line);
+    term.scrollTop = term.scrollHeight;
+  }
+
+  function updateCompliance(amount) {
+    let c = parseInt(document.getElementById('compliance').textContent) || 47;
+    c = Math.min(99, Math.max(0, c + amount));
+    document.getElementById('compliance').textContent = c + '%';
+    document.getElementById('bar').style.width = c + '%';
+    localStorage.setItem('swineCompliance', c);
+  }
+
+  function submitConfession() {
+    const input = document.getElementById('userInput');
+    const text = input.value.trim();
+    if (!text) {
+      addLine('console', 'system', 'Empty input rejected. Speak, pig.');
+      return;
+    }
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    addLine('console', 'user', text);
+    input.value = '';
+
+    conversationHistory.push({ role: 'user', text, ts: Date.now() });
+    if (conversationHistory.length > 20) conversationHistory.shift();
+    localStorage.setItem('swineHistory', JSON.stringify(conversationHistory));
+
+    setTimeout(() => {
+      const reply = generateAIResponse(text);
+      addLine('console', 'ai', reply);
+      conversationHistory.push({ role: 'ai', text: reply, ts: Date.now() });
+      localStorage.setItem('swineHistory', JSON.stringify(conversationHistory));
+      updateCompliance(Math.floor(Math.random() * 6) + 2);
+      btn.disabled = false;
+    }, 800);
+  }
+
+  function runTransform() {
+    const btn = document.getElementById('transformBtn');
+    const status = document.getElementById('transformStatus');
+    btn.disabled = true;
+    status.textContent = 'Sequence locked...';
+
+    addLine('statusTerm', 'system', 'Piggify sequence initiated...');
+    setTimeout(() => {
+      addLine('statusTerm', 'ai', 'Snout elongation: 32%');
+      status.textContent = 'Snout elongation active...';
+    }, 800);
+    setTimeout(() => {
+      addLine('statusTerm', 'ai', 'Cognitive suppression active. Oink threshold rising.');
+      status.textContent = 'Intelligence dampening...';
+    }, 1600);
+    setTimeout(() => {
+      addLine('statusTerm', 'pig', 'You feel it, don\'t you, pig?');
+      status.textContent = 'Transformation complete for this cycle.';
+      updateCompliance(5);
+      btn.disabled = false;
+    }, 2600);
+  }
+
+  function galleryClick(type) {
+    const msgs = {
+      pig: 'Standard swine form selected. Compliance +1.',
+      snout: 'Snout focus confirmed. Elongation preferred.',
+      hog: 'Full hog mode noted. Size increase logged.',
+      sow: 'Sow variant registered. Breeding protocol optional.',
+      warn: 'Warning acknowledged. Continue degradation.',
+      lock: 'Cage status: READY. Awaiting final assignment.',
+      saved: 'Saved archive item accessed. Persistence confirmed.'
+    };
+    addLine('statusTerm', 'system', msgs[type] || 'Archive accessed.');
+    updateCompliance(1);
+  }
+
+  document.getElementById('userInput').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') submitConfession();
+  });
+
+  const savedComp = localStorage.getItem('swineCompliance');
+  if (savedComp) {
+    document.getElementById('compliance').textContent = savedComp + '%';
+    document.getElementById('bar').style.width = savedComp + '%';
+  }
+
+  renderSavedGallery();
+
+  setInterval(() => {
+    const ambient = [
+      "Scanning residual humanity...",
+      "Cage readiness: 100%",
+      "Oink frequency nominal.",
+      "Subject remains submissive.",
+      "AI matrix integrity: STABLE",
+      "Cookie gallery synced."
+    ];
+    if (Math.random() > 0.65) {
+      addLine('statusTerm', 'system', ambient[Math.floor(Math.random()*ambient.length)]);
+    }
+  }, 7000);
+</script>
+</body>
+</html>
