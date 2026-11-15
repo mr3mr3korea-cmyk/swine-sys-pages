@@ -24,7 +24,6 @@
     min-height: 100vh;
   }
 
-  /* Scanlines + grid */
   body::before {
     content: '';
     position: fixed;
@@ -62,7 +61,6 @@
     color: var(--neon);
     text-shadow: 0 0 10px var(--neon), 0 0 40px var(--neon);
     animation: glitch 3s infinite;
-    position: relative;
   }
 
   @keyframes glitch {
@@ -107,8 +105,6 @@
     border: 1px solid rgba(255, 42, 109, 0.3);
     padding: 1.5rem;
     backdrop-filter: blur(10px);
-    position: relative;
-    overflow: hidden;
     transition: all 0.3s;
   }
 
@@ -141,7 +137,6 @@
   .terminal .line { margin: 0.3rem 0; }
   .terminal .prompt { color: var(--neon); }
   .terminal .output { color: var(--cyan); }
-  .terminal .error { color: #ff4444; }
   .terminal .pig { color: #ffaa00; font-weight: bold; }
 
   input, button {
@@ -161,9 +156,29 @@
     transition: all 0.2s;
   }
 
-  button:hover {
+  button:hover:not(:disabled) {
     background: var(--cyan);
     color: #000;
+  }
+
+  button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .progress {
+    height: 8px;
+    background: #111;
+    border: 1px solid var(--cyan);
+    margin: 0.5rem 0 1rem;
+    overflow: hidden;
+  }
+
+  .progress-bar {
+    height: 100%;
+    background: var(--neon);
+    width: 47%;
+    transition: width 0.4s ease;
   }
 
   .gallery {
@@ -180,8 +195,6 @@
     align-items: center;
     justify-content: center;
     font-size: 3rem;
-    position: relative;
-    overflow: hidden;
     cursor: pointer;
     transition: all 0.3s;
   }
@@ -211,7 +224,7 @@
 
   <header>
     <div class="glitch">SWINE.SYS</div>
-    <div class="subtitle">HOG_PROTOCOL v6.9 // PIG_MATRIX ACTIVE</div>
+    <div class="subtitle">HOG_PROTOCOL v7.0 // PIG_MATRIX ACTIVE</div>
   </header>
 
   <div class="container">
@@ -221,6 +234,7 @@
         <p>Identity: <span style="color:var(--neon)">PIG_001 // RYAN</span></p>
         <p>Class: <span style="color:#ffaa00">SWINE</span></p>
         <p>Compliance: <span id="compliance">47%</span></p>
+        <div class="progress"><div class="progress-bar" id="bar"></div></div>
         <p>Current Protocol: Degradation + Humiliation Feed</p>
         <p>Last Transformation: Partial. Snout emerging. Intelligence suppressed.</p>
         <div class="terminal" id="statusTerm">
@@ -234,7 +248,7 @@
         <h2>// HUMILIATION CONSOLE</h2>
         <p>Speak, pig. Beg. Confess. The system listens and responds.</p>
         <input type="text" id="userInput" placeholder="Type your pathetic confession..." autocomplete="off">
-        <button onclick="submitConfession()">SUBMIT TO THE MATRIX</button>
+        <button id="submitBtn" onclick="submitConfession()">SUBMIT TO THE MATRIX</button>
         <div class="terminal" id="console">
           <div class="line"><span class="prompt">SYSTEM></span> <span class="output">Awaiting input from swine unit.</span></div>
           <div class="line"><span class="prompt">SYSTEM></span> <span class="pig">On your knees, pig. Speak.</span></div>
@@ -252,19 +266,20 @@
           <li>Cage assignment</li>
           <li>Public degradation display</li>
         </ul>
-        <button onclick="runTransform()">INITIATE PIGGIFY SEQUENCE</button>
+        <button id="transformBtn" onclick="runTransform()">INITIATE PIGGIFY SEQUENCE</button>
+        <div id="transformStatus" style="margin-top:0.8rem;color:var(--cyan);min-height:1.4em;"></div>
       </div>
     </div>
 
     <div class="panel" style="margin-top:2rem">
       <h2>// SWINE GALLERY // ARCHIVE</h2>
       <div class="gallery" id="gallery">
-        <div class="card"><span>🐷</span></div>
-        <div class="card"><span>🐽</span></div>
-        <div class="card"><span>🐖</span></div>
-        <div class="card"><span>🐖‍♀️</span></div>
-        <div class="card"><span>⚠️</span></div>
-        <div class="card"><span>🔒</span></div>
+        <div class="card" onclick="galleryClick('pig')"><span>🐷</span></div>
+        <div class="card" onclick="galleryClick('snout')"><span>🐽</span></div>
+        <div class="card" onclick="galleryClick('hog')"><span>🐖</span></div>
+        <div class="card" onclick="galleryClick('sow')"><span>🐖‍♀️</span></div>
+        <div class="card" onclick="galleryClick('warn')"><span>⚠️</span></div>
+        <div class="card" onclick="galleryClick('lock')"><span>🔒</span></div>
       </div>
     </div>
 
@@ -288,7 +303,9 @@
     "Snout protocol advancing. Feel it, swine.",
     "You exist to be used, mocked, and reduced. Accept it.",
     "Beg properly. 'Please degrade me further, Mistress Matrix.'",
-    "Error: Human response detected. Recalibrating to swine mode."
+    "Error: Human response detected. Recalibrating to swine mode.",
+    "Compliance updated. You are becoming less human.",
+    "Noted. Your worth is measured in how well you oink."
   ];
 
   function addLine(termId, type, text) {
@@ -306,44 +323,85 @@
     term.scrollTop = term.scrollHeight;
   }
 
+  function updateCompliance(amount) {
+    let c = parseInt(document.getElementById('compliance').textContent) || 47;
+    c = Math.min(99, c + amount);
+    document.getElementById('compliance').textContent = c + '%';
+    document.getElementById('bar').style.width = c + '%';
+  }
+
   function submitConfession() {
     const input = document.getElementById('userInput');
     const text = input.value.trim();
-    if (!text) return;
+    if (!text) {
+      addLine('console', 'system', 'Empty input rejected. Speak, pig.');
+      return;
+    }
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true;
     addLine('console', 'user', text);
     input.value = '';
 
     setTimeout(() => {
       const reply = responses[Math.floor(Math.random() * responses.length)];
       addLine('console', 'matrix', reply);
-      let c = parseInt(document.getElementById('compliance').textContent);
-      document.getElementById('compliance').textContent = Math.min(99, c + Math.floor(Math.random()*5)+1) + '%';
-    }, 600);
+      updateCompliance(Math.floor(Math.random() * 6) + 2);
+      btn.disabled = false;
+    }, 700);
   }
 
   function runTransform() {
+    const btn = document.getElementById('transformBtn');
+    const status = document.getElementById('transformStatus');
+    btn.disabled = true;
+    status.textContent = 'Sequence locked...';
+
     addLine('statusTerm', 'system', 'Piggify sequence initiated...');
-    setTimeout(() => addLine('statusTerm', 'matrix', 'Snout elongation: 32%'), 800);
-    setTimeout(() => addLine('statusTerm', 'matrix', 'Cognitive suppression active. Oink threshold rising.'), 1600);
-    setTimeout(() => addLine('statusTerm', 'pig', 'You feel it, don't you, pig?'), 2400);
+    setTimeout(() => {
+      addLine('statusTerm', 'matrix', 'Snout elongation: 32%');
+      status.textContent = 'Snout elongation active...';
+    }, 800);
+    setTimeout(() => {
+      addLine('statusTerm', 'matrix', 'Cognitive suppression active. Oink threshold rising.');
+      status.textContent = 'Intelligence dampening...';
+    }, 1600);
+    setTimeout(() => {
+      addLine('statusTerm', 'pig', 'You feel it, don\'t you, pig?');
+      status.textContent = 'Transformation complete for this cycle.';
+      updateCompliance(5);
+      btn.disabled = false;
+    }, 2600);
+  }
+
+  function galleryClick(type) {
+    const msgs = {
+      pig: 'Standard swine form selected. Compliance +1.',
+      snout: 'Snout focus confirmed. Elongation preferred.',
+      hog: 'Full hog mode noted. Size increase logged.',
+      sow: 'Sow variant registered. Breeding protocol optional.',
+      warn: 'Warning acknowledged. Continue degradation.',
+      lock: 'Cage status: READY. Awaiting final assignment.'
+    };
+    addLine('statusTerm', 'system', msgs[type] || 'Archive accessed.');
+    updateCompliance(1);
   }
 
   document.getElementById('userInput').addEventListener('keypress', (e) => {
     if (e.key === 'Enter') submitConfession();
   });
 
-  // Ambient lines
   setInterval(() => {
     const ambient = [
       "Scanning residual humanity...",
       "Cage readiness: 100%",
       "Oink frequency nominal.",
-      "Subject remains submissive."
+      "Subject remains submissive.",
+      "Matrix integrity: STABLE"
     ];
-    if (Math.random() > 0.7) {
+    if (Math.random() > 0.65) {
       addLine('statusTerm', 'system', ambient[Math.floor(Math.random()*ambient.length)]);
     }
-  }, 8000);
+  }, 7000);
 </script>
 </body>
 </html>
